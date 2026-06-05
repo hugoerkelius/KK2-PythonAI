@@ -1,0 +1,18 @@
+[project]
+name = "kk2-pythonai-erkelius"
+version = "0.1.0"
+requires-python = ">=3.14"
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "pandas",
+    "transformers",
+    "torch",
+    "python-multipart",
+]
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "pytest>=9.0.3",
+]
