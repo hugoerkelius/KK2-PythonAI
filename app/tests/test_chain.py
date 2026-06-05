@@ -5,7 +5,6 @@ class AddOne(Runnable[int, int]):
     def run(self, input: int) -> int:
         return input + 1
 
-
 class Double(Runnable[int, int]):
     def run(self, input: int) -> int:
         return input * 2
@@ -19,7 +18,6 @@ def test_runnable_or_runnable():
 def test_runnable_or_function():
     chain = AddOne() | (lambda x: x * 2)
     assert chain.run(3) == 8  #(3+1)*2
-
 
 # vanlig funktion & Runnable
 def test_function_or_runnable():

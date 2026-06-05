@@ -9,6 +9,7 @@ dependencies = [
     "transformers",
     "torch",
     "python-multipart",
+    "requests>=2.34.2",
 ]
 
 [dependency-groups]
