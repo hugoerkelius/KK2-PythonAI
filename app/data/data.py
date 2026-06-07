@@ -16,7 +16,7 @@ def load_from_csv(contents: bytes, filename: str) -> pd.DataFrame:
 
 def load_from_api() -> pd.DataFrame:
     global df
-    response = requests.get("https://optcgapi.com/api/allSetCards/")
+    response = requests.get("https://optcgapi.com/api/allSetCards/", timeout=10)
     response.raise_for_status()
     df = pd.DataFrame(response.json())
     return df
