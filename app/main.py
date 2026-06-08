@@ -1,7 +1,23 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, UploadFile, File, HTTPException
-from app.data.data import load_from_csv, load_from_api, get_stats, get_metadata
+from pydantic import BaseModel
+from app.data.data import load_from_csv, load_from_api, get_stats, get_metadata, get_df
+from app.data.summary import QueryInput
+from app.chain.steps import PromptBuilder, LLMRunner, ResponseParser
+from app.config import settings
+chain = None
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    global chain
+    chain = PromptBuilder() | LLMRunner() | ResponseParser()
+    yield
+
+app = FastAPI(lifespan=lifespan)
+
+class AskRequest(BaseModel):
+    question: str
+
 
 @app.get("/health")
 def health():
@@ -11,6 +27,8 @@ def health():
 async def upload_csv(file: UploadFile = File(...)):
     try:
         contents = await file.read()
+        if len(contents) > settings.max_upload_bytes:
+            raise HTTPException(status_code=413, detail="För stor fil")
         load_from_csv(contents, file.filename)
         return get_metadata()
     except ValueError as e:
@@ -30,3 +48,12 @@ def stats():
         return get_stats()
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+
+@app.post("/ai/ask")
+def ask(body: AskRequest):
+    try:
+        df = get_df()
+        result = chain.run(QueryInput(question=body.question, df=df))
+        return result.model_dump()
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
