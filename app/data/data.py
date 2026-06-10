@@ -1,5 +1,6 @@
 import requests, io, os
 import pandas as pd
+import chardet
 from typing import Optional
 
 df: Optional[pd.DataFrame] = None
@@ -8,8 +9,16 @@ def load_from_csv(contents: bytes, filename: str) -> pd.DataFrame:
     global df
     if not filename.endswith(".csv"):
         raise ValueError("Måste vara en CSV-fil.")
+    if len(contents) == 0:
+        raise ValueError("Filen är tom.")
+    encoding = chardet.detect(contents)["encoding"] or "utf-8"
+    try:
+        df = pd.read_csv(io.BytesIO(contents), encoding=encoding)
+    except Exception as e:
+        raise ValueError(f"Kunde inte läsa filen: {e}")
+    if df.empty:
+        raise ValueError("Csv filen saknar data")
 
-    df = pd.read_csv(io.BytesIO(contents))
     return df
 
 def save_to_csv(path: str = "data/cards.csv") -> None:
@@ -40,3 +49,8 @@ def get_metadata() -> dict:
         "columns": df.columns.tolist(),
         "dtypes": df.dtypes.astype(str).to_dict()
     }
+
+if __name__ == "__main__":
+    load_from_api()
+    save_to_csv("data/cards.csv")
+    print("Sparad!")

@@ -53,7 +53,10 @@ def stats():
 def ask(body: AskRequest):
     try:
         df = get_df()
-        result = chain.run(QueryInput(question=body.question, df=df))
-        return result.model_dump()
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    try:
+        result = chain.run(QueryInput(question=body.question, df=df))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Modellfel: {e}")
+    return result.model_dump()
