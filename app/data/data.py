@@ -1,4 +1,4 @@
-import requests
+import requests, io, os
 import pandas as pd
 from typing import Optional
 
@@ -9,9 +9,14 @@ def load_from_csv(contents: bytes, filename: str) -> pd.DataFrame:
     if not filename.endswith(".csv"):
         raise ValueError("Måste vara en CSV-fil.")
 
-    import io
     df = pd.read_csv(io.BytesIO(contents))
     return df
+
+def save_to_csv(path: str = "data/cards.csv") -> None:
+    mapp = os.path.dirname(path)
+    if mapp: 
+        os.makedirs(mapp, exist_ok=True)
+    get_df().to_csv(path, index=False)
 
 def load_from_api() -> pd.DataFrame:
     global df

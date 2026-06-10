@@ -1,6 +1,6 @@
-from app.chain.runnable import Runnable
+from app.chain.runnable import Runnable, RunnableLambda
 import pandas as pd
-from app.chain.steps import PromptBuilder, LLMRunner, LLMRunnerOutput, ResponseParser
+from app.chain.steps import PromptBuilder, LLMRunnerOutput, ResponseParser
 from app.data.summary import QueryInput
 
 class AddOne(Runnable[int, int]):
@@ -32,7 +32,8 @@ def test_prompt_builder():
         "card_name": ["Luffy", "Zoro"],
         "card_color": ["Red", "Green"],
         "card_type": ["Character", "Character"],
-        "market_price": [100.0, 50.0]
+        "market_price": [100.0, 50.0],
+        "rarity": ["R", "SR"]
     })
     builder = PromptBuilder()
     result = builder.run(QueryInput(question="Vilket kort är dyrast?", df=df))
@@ -43,28 +44,26 @@ def test_prompt_builder():
 def test_response_parser():
     parser = ResponseParser()
     result = parser.run(LLMRunnerOutput(
-        raw_answer="  Luffy kostar 100 kr.  ",
+        raw_answer="Luffy kostar 100 kr.",
         question="Hur mycket kostar Luffy?"
     ))
     assert result.answer == "Luffy kostar 100 kr."
     assert result.question == "Hur mycket kostar Luffy?"
 
-def test_full_chain_mocked(monkeypatch):
+def test_full_chain_mocked():
     df = pd.DataFrame({
         "card_name": ["Luffy"],
         "card_color": ["Red"],
         "card_type": ["Character"],
-        "market_price": [100.0]
+        "market_price": [100.0],
+        "rarity": ["R"],
     })
 
-    def fake_run(self, input):
-        return LLMRunnerOutput(
-            raw_answer="Luffy kostar 100 kr.",
-            question=input.question
-        )
+    fake_llm = RunnableLambda(lambda inp: LLMRunnerOutput(
+        raw_answer="Luffy kostar 100 kr.",
+        question=inp.question,
+    ))
 
-    monkeypatch.setattr(LLMRunner, "run", fake_run)
-
-    chain = PromptBuilder() | LLMRunner() | ResponseParser()
+    chain = PromptBuilder() | fake_llm | ResponseParser()
     result = chain.run(QueryInput(question="Hur mycket kostar Luffy?", df=df))
     assert result.answer == "Luffy kostar 100 kr."

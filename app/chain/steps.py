@@ -27,7 +27,7 @@ class PromptBuilder(Runnable[QueryInput, PromptBuilderOutput]):
             "Du är en expert på One Piece Trading Card Game. "
             "Svara direkt och koncist på frågan. "
             "Använd endast den data som ges. "
-            "Svara på svenska."
+            "Svara på engelska."
         )
         data = summarize(input.df)
         prompt = (

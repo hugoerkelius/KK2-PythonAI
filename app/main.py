@@ -25,10 +25,10 @@ def health():
 
 @app.post("/data/upload")
 async def upload_csv(file: UploadFile = File(...)):
+    contents = await file.read()
+    if len(contents) > settings.max_upload_bytes:
+        raise HTTPException(status_code=413, detail="För stor fil")
     try:
-        contents = await file.read()
-        if len(contents) > settings.max_upload_bytes:
-            raise HTTPException(status_code=413, detail="För stor fil")
         load_from_csv(contents, file.filename)
         return get_metadata()
     except ValueError as e:
